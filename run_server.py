@@ -20,7 +20,7 @@ def run():
         time.sleep(2.0)
         
         # Open browser
-        url = "http://localhost:8001/static/index.html"
+        url = "http://localhost:8001/index.html"
         print(f"Opening browser at: {url}")
         webbrowser.open(url)
         
