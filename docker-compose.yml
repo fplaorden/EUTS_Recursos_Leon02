@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: social_app
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    expose:
+      - "8001"
+    volumes:
+      - social_db:/app/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+  nginx:
+    container_name: social_nginx
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "80:80"
+      - "8443:8443"
+    depends_on:
+      - app
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  social_db:

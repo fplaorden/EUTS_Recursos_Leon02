@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Escuela Universitaria de Trabajo Social (ULE)</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Admin specific layouts */
+        .admin-layout {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .admin-main {
+            flex: 1;
+            padding: 32px 24px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .admin-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .admin-tab {
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all var(--transition-fast);
+        }
+        .admin-tab:hover {
+            color: var(--text-primary);
+        }
+        .admin-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .admin-panel {
+            display: none;
+        }
+        .admin-panel.active {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Forms in Modal */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        @media(max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="admin-layout">
+    <header>
+        <div class="logo-container">
+            <img src="https://trabajosocial.unileon.es/wp-content/themes/ule_wp_2025/img/escudo.svg" alt="Escudo EUTS" class="logo-img logo-euts">
+            <div class="logo-text">
+                <h1>Escuela Universitaria de Trabajo Social</h1>
+                <p>Universidad de León • Panel de Administración</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="index.html" class="btn btn-secondary">
+                <i data-lucide="map"></i> <span>Ver Mapa Público</span>
+            </a>
+            <span id="user-display" style="font-size: 0.9rem; font-weight: 600; color: var(--text-secondary)"></span>
+            <button class="btn btn-secondary" onclick="openChangePasswordModal()" title="Cambiar Contraseña">
+                <i data-lucide="key"></i>
+            </button>
+            <button class="btn btn-danger" onclick="handleLogout()" title="Cerrar Sesión">
+                <i data-lucide="log-out"></i> <span>Salir</span>
+            </button>
+            <button class="btn-icon" id="theme-toggle" title="Cambiar Tema">
+                <i data-lucide="moon" id="theme-icon"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <!-- NAVIGATION TABS -->
+        <nav class="admin-tabs">
+            <div class="admin-tab active" data-panel="recursos-panel">
+                <i data-lucide="database"></i> Recursos y Servicios
+            </div>
+            <div class="admin-tab" data-panel="usuarios-panel">
+                <i data-lucide="users"></i> Administradores
+            </div>
+        </nav>
+
+        <!-- PANEL 1: RESOURCES CRUD -->
+        <section class="admin-panel active" id="recursos-panel">
+            <div class="admin-toolbar">
+                <div class="search-container" style="width: 320px;">
+                    <i class="search-icon" data-lucide="search"></i>
+                    <input type="text" id="admin-search" class="search-input" placeholder="Buscar por nombre o dirección..." oninput="renderAdminEntities()">
+                </div>
+                <button class="btn btn-primary" onclick="openEntityModal()">
+                    <i data-lucide="plus"></i> Crear Nueva Entidad
+                </button>
+            </div>
+
+            <!-- List of Entities (Accordion) -->
+            <div class="admin-grid" id="admin-entities-list">
+                <!-- Entities populated via JS -->
+            </div>
+        </section>
+
+        <!-- PANEL 2: ADMIN USERS CRUD -->
+        <section class="admin-panel" id="usuarios-panel">
+            <div class="admin-toolbar">
+                <h2 style="font-size: 1.2rem; font-weight: 700;">Administradores Registrados</h2>
+                <button class="btn btn-primary" onclick="openUserModal()">
+                    <i data-lucide="user-plus"></i> Crear Administrador
+                </button>
+            </div>
+
+            <div class="users-table-container">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Correo Electrónico</th>
+                            <th>Fecha de Registro</th>
+                            <th style="width: 100px; text-align: right;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-users-list">
+                        <!-- Users populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- 1. ENTITY MODAL -->
+    <div class="modal-overlay" id="entity-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-area">
+                    <h2 class="modal-title" id="entity-modal-title">Crear Nueva Entidad</h2>
+                    <span class="modal-subtitle">Introduce los datos de la institución o centro social</span>
+                </div>
+                <button class="modal-close" onclick="closeEntityModal()">
+                    <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="entity-form" onsubmit="saveEntity(event)">
+                    <input type="hidden" id="entity-id">
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="ent-nombre">Nombre de la Entidad *</label>
+                            <input type="text" id="ent-nombre" class="form-control" placeholder="Ej: Hogar de Jubilados San Pedro" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-tipo">Tipo de Entidad</label>
+                            <input type="text" id="ent-tipo" class="form-control" placeholder="Ej: asociacion, centrodia">
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-titularidad">Titularidad</label>
+                            <select id="ent-titularidad" class="form-control">
+                                <option value="Pública">Pública</option>
+                                <option value="Privada">Privada</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="ent-direccion">Dirección *</label>
+                            <input type="text" id="ent-direccion" class="form-control" placeholder="Ej: Calle Simón Arias s/n" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-cp">Código Postal</label>
+                            <input type="text" id="ent-cp" class="form-control" placeholder="Ej: 24005">
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-localidad">Localidad</label>
+                            <input type="text" id="ent-localidad" class="form-control" value="LEÓN">
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-latitud">Latitud (Opcional)</label>
+                            <input type="number" id="ent-latitud" step="any" class="form-control" placeholder="Ej: 42.5987">
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-longitud">Longitud (Opcional)</label>
+                            <input type="number" id="ent-longitud" step="any" class="form-control" placeholder="Ej: -5.5684">
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-telefono">Teléfono 1</label>
+                            <input type="text" id="ent-telefono" class="form-control" placeholder="Ej: 987 202132">
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-telefono2">Teléfono 2</label>
+                            <input type="text" id="ent-telefono2" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-email">Email</label>
+                            <input type="email" id="ent-email" class="form-control" placeholder="ejemplo@leon.es">
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-web">Web</label>
+                            <input type="text" id="ent-web" class="form-control" placeholder="www.ejemplo.es">
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-ceas">CEAS Zona</label>
+                            <input type="text" id="ent-ceas" class="form-control" placeholder="Ej: Crucero, José Aguado">
+                        </div>
+                        <div class="form-group">
+                            <label for="ent-area">Área</label>
+                            <select id="ent-area" class="form-control"></select>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="ent-colectivo">Colectivo Principal</label>
+                            <select id="ent-colectivo" class="form-control"></select>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeEntityModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Entidad</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. SERVICE MODAL -->
+    <div class="modal-overlay" id="service-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-area">
+                    <h2 class="modal-title" id="service-modal-title">Añadir Servicio / Prestación</h2>
+                    <span class="modal-subtitle">Asocia un nuevo servicio o beneficio a la entidad</span>
+                </div>
+                <button class="modal-close" onclick="closeServiceModal()">
+                    <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="service-form" onsubmit="saveService(event)">
+                    <input type="hidden" id="service-id">
+                    <input type="hidden" id="service-entity-id">
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="ser-nombre">Nombre del Servicio / Prestación *</label>
+                            <input type="text" id="ser-nombre" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ser-tipo-registro">Tipo de Registro</label>
+                            <select id="ser-tipo-registro" class="form-control">
+                                <option value="servicio">Servicio (Actividad o centro)</option>
+                                <option value="prestación">Prestación (Ayuda o beneficio económico)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ser-tipo-servicio">Tipo de Servicio</label>
+                            <select id="ser-tipo-servicio" class="form-control"></select>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="ser-desc-corta">Descripción Corta</label>
+                            <input type="text" id="ser-desc-corta" class="form-control">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="ser-desc-larga">Descripción Detallada</label>
+                            <textarea id="ser-desc-larga" class="form-control" style="height: 100px; font-family: var(--font-primary);"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="ser-plazas">Número de Plazas</label>
+                            <input type="text" id="ser-plazas" class="form-control" placeholder="Ej: Ilimitadas, 12, 230">
+                        </div>
+                        <div class="form-group">
+                            <label for="ser-cita">Cita Previa</label>
+                            <select id="ser-cita" class="form-control">
+                                <option value="">No Especificado</option>
+                                <option value="Sí">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ser-horario">Horario</label>
+                            <input type="text" id="ser-horario" class="form-control" placeholder="Ej: 24 horas, Lunes a Viernes de 9 a 14">
+                        </div>
+                        <div class="form-group">
+                            <label for="ser-aportacion">Aportación Beneficiario (Coste)</label>
+                            <input type="text" id="ser-aportacion" class="form-control" placeholder="Ej: Gratuito, Cuota anual, 80% de la pensión">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="ser-condiciones">Condiciones de Admisión</label>
+                            <input type="text" id="ser-condiciones" class="form-control" placeholder="Ej: Mayor de 65 años, residencia en León...">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="ser-finalidad">Finalidad del Servicio</label>
+                            <input type="text" id="ser-finalidad" class="form-control">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="ser-documentos">Documentación Requerida (Uno por línea)</label>
+                            <textarea id="ser-documentos" class="form-control" style="height: 100px; font-family: var(--font-primary);" placeholder="Ej: D.N.I.&#10;Tarjeta Sanitaria&#10;Informe médico"></textarea>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeServiceModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Servicio</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. USER CREATION MODAL -->
+    <div class="modal-overlay" id="user-modal">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">
+                <div class="modal-title-area">
+                    <h2 class="modal-title">Registrar Administrador</h2>
+                    <span class="modal-subtitle">Crea una cuenta para gestionar los recursos</span>
+                </div>
+                <button class="modal-close" onclick="closeUserModal()">
+                    <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="user-form" onsubmit="saveUser(event)" class="auth-form">
+                    <div class="form-group">
+                        <label for="user-name">Nombre de Usuario *</label>
+                        <input type="text" id="user-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-email">Correo Electrónico *</label>
+                        <input type="email" id="user-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-password">Contraseña Temporal *</label>
+                        <input type="password" id="user-password" class="form-control" minlength="6" required>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Crear Cuenta</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. CHANGE PASSWORD MODAL -->
+    <div class="modal-overlay" id="password-modal">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">
+                <div class="modal-title-area">
+                    <h2 class="modal-title">Cambiar Contraseña</h2>
+                    <span class="modal-subtitle">Modifica tu contraseña de acceso</span>
+                </div>
+                <button class="modal-close" onclick="closeChangePasswordModal()">
+                    <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="password-form" onsubmit="saveNewPassword(event)" class="auth-form">
+                    <div class="form-group">
+                        <label for="pwd-old">Contraseña Actual *</label>
+                        <input type="password" id="pwd-old" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pwd-new">Nueva Contraseña *</label>
+                        <input type="password" id="pwd-new" class="form-control" minlength="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pwd-confirm">Confirmar Nueva Contraseña *</label>
+                        <input type="password" id="pwd-confirm" class="form-control" required>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js"></script>
+    <script>
+        // Tab switching in admin
+        const tabs = document.querySelectorAll('.admin-tab');
+        const panels = document.querySelectorAll('.admin-panel');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+
+                tab.classList.add('active');
+                const panelId = tab.getAttribute('data-panel');
+                document.getElementById(panelId).classList.add('active');
+
+                if (panelId === 'usuarios-panel') {
+                    loadAdminUsersList();
+                }
+            });
+        });
+
+        // Initialize admin view on load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkAdminAuth();
+        });
+    </script>
+</body>
+</html>

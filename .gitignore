@@ -1,0 +1,33 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Local databases and active instance files
+data/
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Logs and debug files
+*.log
+server_log.txt
+*debug.txt
+ports_check_result.txt
+coords_check.txt
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# IDE configurations
+.vscode/
+.idea/

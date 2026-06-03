@@ -1,0 +1,35 @@
+import urllib.request
+import json
+import os
+
+def check():
+    url = "http://localhost:8001/api/recursos"
+    output_file = "api_output_debug.txt"
+    
+    try:
+        req = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'}), timeout=5)
+        data = json.loads(req.read().decode('utf-8'))
+        
+        entities = data.get("entidades", [])
+        
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(f"Conexión exitosa a {url}\n")
+            f.write(f"Total de entidades recibidas por API: {len(entities)}\n\n")
+            
+            f.write("Muestra de las primeras 10 entidades con sus coordenadas:\n")
+            for ent in entities[:10]:
+                f.write(f" - ID: {ent.get('id')}\n")
+                f.write(f"   Nombre: {ent.get('nombre')}\n")
+                f.write(f"   Latitude: {ent.get('latitude')} (tipo: {type(ent.get('latitude')).__name__})\n")
+                f.write(f"   Longitude: {ent.get('longitude')} (tipo: {type(ent.get('longitude')).__name__})\n")
+                f.write(f"   Area: {ent.get('area')}\n")
+                f.write(f"   Colectivo: {ent.get('colectivo')}\n\n")
+                
+        print(f"Comprobación completada. Resultados en {output_file}")
+    except Exception as e:
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(f"ERROR conectando a {url}: {e}\n")
+        print(f"Error: {e}")
+
+if __name__ == "__main__":
+    check()

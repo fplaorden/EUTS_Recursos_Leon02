@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Administrativo - Escuela Universitaria de Trabajo Social (ULE)</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="https://trabajosocial.unileon.es/wp-content/themes/ule_wp_2025/img/escudo.svg" alt="Escudo EUTS" class="logo-img logo-euts">
+            <div class="logo-text">
+                <h1>Escuela Universitaria de Trabajo Social</h1>
+                <p>Universidad de León • Acceso Administrativo</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="index.html" class="btn btn-secondary">
+                <i data-lucide="map"></i> <span>Volver al Mapa</span>
+            </a>
+            <button class="btn-icon" id="theme-toggle" title="Cambiar Tema">
+                <i data-lucide="moon" id="theme-icon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <!-- 1. LOGIN FORM -->
+            <div id="login-container">
+                <div class="auth-header">
+                    <h2>Iniciar Sesión</h2>
+                    <p>Acceso exclusivo para administradores de recursos</p>
+                </div>
+                <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="username">Usuario o Correo Electrónico</label>
+                        <input type="text" id="username" class="form-control" placeholder="Ej: admin o admin@leon.es" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                        <i data-lucide="log-in"></i> Acceder
+                    </button>
+                </form>
+                <div class="auth-footer" style="margin-top: 24px;">
+                    <a onclick="showForgotPassword()">¿Olvidó su contraseña?</a>
+                </div>
+            </div>
+
+            <!-- 2. FORGOT PASSWORD FORM -->
+            <div id="forgot-container" style="display: none;">
+                <div class="auth-header">
+                    <h2>Recuperar Contraseña</h2>
+                    <p>Introduce tu correo para recibir un enlace de recuperación</p>
+                </div>
+                <form id="forgot-form" class="auth-form" onsubmit="handleForgotPassword(event)">
+                    <div class="form-group">
+                        <label for="recovery-email">Correo Electrónico</label>
+                        <input type="email" id="recovery-email" class="form-control" placeholder="usuario@leon.es" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                        <i data-lucide="send"></i> Enviar Enlace
+                    </button>
+                </form>
+                <div class="auth-footer" style="margin-top: 24px;">
+                    <a onclick="showLogin()">Volver a Iniciar Sesión</a>
+                </div>
+            </div>
+
+            <!-- 3. RESET PASSWORD FORM -->
+            <div id="reset-container" style="display: none;">
+                <div class="auth-header">
+                    <h2>Nueva Contraseña</h2>
+                    <p>Establece tu nueva contraseña de acceso</p>
+                </div>
+                <form id="reset-form" class="auth-form" onsubmit="handleResetPassword(event)">
+                    <div class="form-group">
+                        <label for="new-password">Nueva Contraseña</label>
+                        <input type="password" id="new-password" class="form-control" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Confirmar Contraseña</label>
+                        <input type="password" id="confirm-password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                        <i data-lucide="lock"></i> Restablecer Contraseña
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // Init Lucide
+        lucide.createIcons();
+
+        // Theme Management
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        
+        let currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        updateThemeIcon();
+
+        themeToggleBtn.addEventListener('click', () => {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            updateThemeIcon();
+        });
+
+        function updateThemeIcon() {
+            if (currentTheme === 'dark') {
+                themeIcon.setAttribute('data-lucide', 'sun');
+            } else {
+                themeIcon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+        }
+
+        // Navigation toggles
+        function showForgotPassword() {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('forgot-container').style.display = 'block';
+            document.getElementById('reset-container').style.display = 'none';
+        }
+
+        function showLogin() {
+            document.getElementById('login-container').style.display = 'block';
+            document.getElementById('forgot-container').style.display = 'none';
+            document.getElementById('reset-container').style.display = 'none';
+        }
+
+        function showResetPassword() {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('forgot-container').style.display = 'none';
+            document.getElementById('reset-container').style.display = 'block';
+        }
+
+        // Check if token exists in URL (Password recovery link clicked)
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        if (token) {
+            showResetPassword();
+        }
+
+        // Check if already authenticated, redirect to admin.html
+        fetch('/api/auth/check')
+            .then(res => res.json())
+            .then(data => {
+                if (data.authenticated && !token) {
+                    window.location.href = 'admin.html';
+                }
+            });
+
+        // Toast Messages helper
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let iconName = 'info';
+            if (type === 'success') iconName = 'check-circle';
+            if (type === 'error') iconName = 'alert-triangle';
+            if (type === 'warning') iconName = 'alert-circle';
+            
+            toast.innerHTML = `<i data-lucide="${iconName}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.style.animation = 'none';
+                toast.style.transition = 'opacity 0.3s ease';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Form Handlers
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('Login exitoso. Redirigiendo...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'admin.html';
+                    }, 1200);
+                } else {
+                    showToast(data.error || 'Error al iniciar sesión', 'error');
+                }
+            })
+            .catch(() => showToast('Error de conexión con el servidor', 'error'));
+        }
+
+        function handleForgotPassword(event) {
+            event.preventDefault();
+            const email = document.getElementById('recovery-email').value;
+
+            fetch('/api/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            })
+            .then(async res => {
+                const data = await res.json();
+                showToast(data.message || 'Solicitud enviada.', 'success');
+                setTimeout(() => {
+                    showLogin();
+                }, 3000);
+            })
+            .catch(() => showToast('Error al enviar la solicitud', 'error'));
+        }
+
+        function handleResetPassword(event) {
+            event.preventDefault();
+            const password = document.getElementById('new-password').value;
+            const confirm = document.getElementById('confirm-password').value;
+
+            if (password !== confirm) {
+                showToast('Las contraseñas no coinciden', 'error');
+                return;
+            }
+
+            fetch('/api/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, password })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('Contraseña restablecida con éxito. Redirigiendo al login...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    showToast(data.error || 'Error al restablecer contraseña', 'error');
+                }
+            })
+            .catch(() => showToast('Error de red', 'error'));
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+=== DATABASE TABLES AND COLUMNS ===
+
+Table: sqlite_sequence
+  Column: name ()
+  Column: seq ()
+  Sample row:
+    {'name': 'area', 'seq': 8}
+
+Table: area
+  Column: id_area (INTEGER) [PK]
+  Column: nombre_area (TEXT) [NOT NULL]
+  Sample row:
+    {'id_area': 1, 'nombre_area': 'Sin especificar'}
+
+Table: colectivo
+  Column: id_colectivo (INTEGER) [PK]
+  Column: nombre_colectivo (TEXT) [NOT NULL]
+  Sample row:
+    {'id_colectivo': 1, 'nombre_colectivo': 'Sin especificar'}
+
+Table: tipo_servicio
+  Column: id_tipo_servicio (INTEGER) [PK]
+  Column: nombre_tipo_servicio (TEXT) [NOT NULL]
+  Sample row:
+    {'id_tipo_servicio': 1, 'nombre_tipo_servicio': 'Sin especificar'}
+
+Table: entidad
+  Column: id_entidad (INTEGER) [PK]
+  Column: nombre (TEXT)
+  Column: nombre_desc (TEXT)
+  Column: direccion (TEXT)
+  Column: localidad (TEXT)
+  Column: cp (TEXT)
+  Column: tfno (TEXT)
+  Column: tfno2 (TEXT)
+  Column: fax (TEXT)
+  Column: email (TEXT)
+  Column: web (TEXT)
+  Column: titularidad (TEXT)
+  Column: tip_ent (TEXT)
+  Column: programa (TEXT)
+  Column: otros_serv (TEXT)
+  Column: cumplimentada (TEXT)
+  Column: key_entidad (TEXT)
+  Column: ceas (TEXT)
+  Column: id_area (INTEGER)
+  Column: id_colectivo (INTEGER)
+  Sample row:
+    {'id_entidad': 3, 'nombre': 'Hogar de Jubilados "San Pedro"', 'nombre_desc': 'Hogar de Jubilados "San Pedro" tercera edad ancianos personas mayores', 'direccion': 'C/ Simón Arias s/n', 'localidad': 'LEÓN', 'cp': '24005', 'tfno': None, 'tfno2': '987 202132', 'fax': None, 'email': None, 'web': None, 'titularidad': 'Privada', 'tip_ent': 'centrodia', 'programa': 'n', 'otros_serv': 'Animación Socio-Cultural.', 'cumplimentada': '1', 'key_entidad': 'tercera edad ancianos personas mayores', 'ceas': None, 'id_area': 2, 'id_colectivo': 5}
+
+Table: servicios
+  Column: id_servicio (INTEGER) [PK]
+  Column: id_entidad (INTEGER) [NOT NULL]
+  Column: serv_prest (TEXT)
+  Column: descrip (TEXT)
+  Column: desc_servicio (TEXT)
+  Column: cond_admision (TEXT)
+  Column: aport_benefic (TEXT)
+  Column: n_plazas (INTEGER)
+  Column: horario (TEXT)
+  Column: cita (TEXT)
+  Column: dir_serv (TEXT)
+  Column: fin_serv (TEXT)
+  Column: legislacion (TEXT)
+  Column: req_documen (TEXT)
+  Column: key_servicio (TEXT)
+  Column: grupo_tipo (TEXT)
+  Column: id_tipo_servicio (INTEGER)
+  Sample row:
+    {'id_servicio': 4, 'id_entidad': 3, 'serv_prest': 'Hogar de Tercera Edad', 'descrip': 'Se realizan de forma periódica las siguientes actividades; campeonatos de cartas, juegos, excursiones, visitas guiadas etc.', 'desc_servicio': 'Hogar de Tercera Edad ancianos, tercera edad, personas mayores', 'cond_admision': 'Ser pensionista/jubilado. Residir en el Barrio de Puente Castro.', 'aport_benefic': 'Cuota anual', 'n_plazas': None, 'horario': 'Vinculado a las actividades realizadas generalmente por la tarde.', 'cita': None, 'dir_serv': 'C/ Simón Arias s/n - 24005 LEÓN', 'fin_serv': 'Optmizar los cauces de representación y participación de las personas mayores, favoreciendo los espacios para la manifestación de sus inquietudes y expectativas.', 'legislacion': None, 'req_documen': None, 'key_servicio': 'ancianos, tercera edad, personas mayores', 'grupo_tipo': 'servicio', 'id_tipo_servicio': 13}
+
+Table: documentacion
+  Column: id_documento (INTEGER) [PK]
+  Column: id_servicio (INTEGER) [NOT NULL]
+  Column: nom_doc (TEXT)
+  Column: fichero (TEXT)
+  Sample row:
+    {'id_documento': 1, 'id_servicio': 10, 'nom_doc': 'Informe médico.', 'fichero': None}
+
+=== FOREIGN KEY RELATIONSHIPS ===
+
+Table: entidad
+  entidad.id_colectivo -> colectivo.id_colectivo (ON DELETE: NO ACTION)
+  entidad.id_area -> area.id_area (ON DELETE: NO ACTION)
+
+Table: servicios
+  servicios.id_tipo_servicio -> tipo_servicio.id_tipo_servicio (ON DELETE: NO ACTION)
+  servicios.id_entidad -> entidad.id_entidad (ON DELETE: NO ACTION)
+
+Table: documentacion
+  documentacion.id_servicio -> servicios.id_servicio (ON DELETE: NO ACTION)

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursos de Asistencia Social - Escuela Universitaria de Trabajo Social (ULE)</title>
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Leaflet.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="https://trabajosocial.unileon.es/wp-content/themes/ule_wp_2025/img/escudo.svg" alt="Escudo EUTS" class="logo-img logo-euts">
+            <div class="logo-text">
+                <h1>Escuela Universitaria de Trabajo Social</h1>
+                <p>Universidad de León • Recursos de Asistencia Social</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="login.html" class="btn btn-primary" id="admin-entry-btn">
+                <i data-lucide="shield"></i> <span>Acceso Administrador</span>
+            </a>
+            <button class="btn-icon" id="theme-toggle" title="Cambiar Tema">
+                <i data-lucide="moon" id="theme-icon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="dashboard">
+        <!-- SIDEBAR FOR FILTERS -->
+        <aside class="sidebar">
+            <div class="search-section">
+                <div class="search-container">
+                    <i class="search-icon" data-lucide="search"></i>
+                    <input type="text" id="main-search" class="search-input" placeholder="Buscar recursos o servicios..." autocomplete="off">
+                </div>
+                <!-- Autocomplete suggestions dropdown -->
+                <div class="suggestions-list" id="search-suggestions"></div>
+            </div>
+
+            <div class="filters-section">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="font-size: 0.9rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary);">Filtros Avanzados</h2>
+                    <a id="btn-reset-filters" style="font-size: 0.8rem; color: var(--primary); cursor: pointer; font-weight: 500;">Limpiar</a>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="filter-area">Área de Actuación</label>
+                    <select id="filter-area" class="filter-select">
+                        <option value="">Todas las Áreas</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filter-collective">Colectivo Destinatario</label>
+                    <select id="filter-collective" class="filter-select">
+                        <option value="">Todos los Colectivos</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filter-type">Tipo de Servicio / Prestación</label>
+                    <select id="filter-type" class="filter-select">
+                        <option value="">Todos los Tipos</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filter-titularity">Titularidad</label>
+                    <select id="filter-titularity" class="filter-select">
+                        <option value="">Cualquiera</option>
+                        <option value="Pública">Pública</option>
+                        <option value="Privada">Privada</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                Escuela Universitaria de Trabajo Social<br>Universidad de León
+            </div>
+        </aside>
+
+        <!-- MAIN WINDOW -->
+        <main class="main-content">
+            <!-- Navigation Tabs -->
+            <div class="tabs-container">
+                <div class="tabs">
+                    <div class="tab active" data-tab="map-view-panel">
+                        <i data-lucide="map"></i> Mapa
+                    </div>
+                    <div class="tab" data-tab="directory-view-panel">
+                        <i data-lucide="list"></i> Directorio
+                    </div>
+                </div>
+                <div class="stats-counter" id="stats-counter">
+                    Cargando recursos...
+                </div>
+            </div>
+
+            <!-- VIEW 1: MAP -->
+            <div class="view-panel active" id="map-view-panel">
+                <div id="map"></div>
+            </div>
+
+            <!-- VIEW 2: DIRECTORY CARDS -->
+            <div class="view-panel" id="directory-view-panel">
+                <div class="directory-container" id="directory-container"></div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="main-footer">
+        Escuela Universitaria de Trabajo Social<br>Universidad de León
+    </footer>
+
+    <!-- DETAIL MODAL WINDOW -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-area">
+                    <h2 class="modal-title" id="modal-entity-name">Nombre de la Entidad</h2>
+                    <span class="modal-subtitle" id="modal-entity-type">Tipo de Entidad</span>
+                </div>
+                <button class="modal-close" onclick="closeModal()">
+                    <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Entity overview -->
+                <div class="detail-grid">
+                    <div class="detail-section">
+                        <h3>Contacto y Datos</h3>
+                        <div class="detail-list" id="modal-entity-contact">
+                            <!-- Items dynamically added -->
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <h3>Clasificación</h3>
+                        <div class="detail-list" id="modal-entity-classification">
+                            <!-- Items dynamically added -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Services List -->
+                <div class="detail-section">
+                    <h3 style="margin-bottom: 12px;">Servicios y Prestaciones que Ofrece</h3>
+                    <div class="services-section" id="modal-services-list">
+                        <!-- Services dynamically added -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>

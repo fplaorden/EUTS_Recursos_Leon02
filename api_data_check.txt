@@ -1,0 +1,2 @@
+ERROR conectando a http://localhost:8001/api/recursos: <urlopen error [WinError 10061] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión>
+¿Está el servidor Flask corriendo en el puerto 8001?
